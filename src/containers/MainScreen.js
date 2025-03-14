@@ -10,6 +10,7 @@ import { searchPlaces, selectPlace, fetchPlaceDetails } from '../actions/placeAc
 const MainScreen = () => {
   const dispatch = useDispatch();
   const [query, setQuery] = useState('');
+  const [region, setRegion] = useState(null);
 
   const { loading, places, searchHistory, error, selectedPlace } = useSelector((state) => state.places);
 
@@ -22,6 +23,17 @@ const MainScreen = () => {
       return () => clearTimeout(delayDebounceFn);
     }
   }, [query, dispatch]);
+
+  useEffect(() => {
+  if (selectedPlace && selectedPlace.geometry && selectedPlace.geometry.location) {
+    setRegion({
+      latitude: selectedPlace.geometry.location.lat,
+      longitude: selectedPlace.geometry.location.lng,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
+  }
+}, [selectedPlace]);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -59,27 +71,17 @@ const MainScreen = () => {
           ))}
         </List>
         
-        {selectedPlace &&
-          selectedPlace.geometry &&
-          selectedPlace.geometry.location && (
-            <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: selectedPlace.geometry.location.lat,
-                longitude: selectedPlace.geometry.location.lng,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
+        {region && (
+          <MapView style={styles.map} region={region}>
+            <Marker
+              coordinate={{
+                latitude: region.latitude,
+                longitude: region.longitude,
               }}
-            >
-              <Marker
-                coordinate={{
-                  latitude: selectedPlace.geometry.location.lat,
-                  longitude: selectedPlace.geometry.location.lng,
-                }}
-                title={selectedPlace.name}
-              />
-            </MapView>
-          )}
+              title={selectedPlace.name}
+            />
+          </MapView>
+        )}
 
       </View>
     </SafeAreaView>
